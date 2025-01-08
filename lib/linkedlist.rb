@@ -1,4 +1,5 @@
 require_relative 'node'
+require 'pry-byebug'
 class LinkedList
   def initialize(value = nil)
     @head_node = Node.new(value)
@@ -11,6 +12,7 @@ class LinkedList
     while appended == false
       if current_node.next_node.nil?
         current_node.next_node = new_node
+        @head_node = new_node if @head_node.value.nil?
         appended = true
       else
         current_node = current_node.next_node
@@ -20,11 +22,15 @@ class LinkedList
 
   def prepend(value)
     new_node = Node.new(value, @head_node)
-    @head_node = new_node
+    if @head_node.value.nil?
+      @head_node.value = value
+    else
+      @head_node = new_node
+    end
   end
 
   def size
-    size = 0
+    size = 1
     current_node = @head_node
     until current_node.next_node.nil?
       size += 1
@@ -50,6 +56,8 @@ class LinkedList
     while node_found == false
       if node_index == index
         node_found = true
+      elsif current_node.nil?
+        break
       else
         node_index += 1
         current_node = current_node.next_node
@@ -64,9 +72,11 @@ class LinkedList
     popped = false
     current_node = @head_node
     while popped == false
-      if current_node.next_node.nil?
-        current_node = nil
+      if current_node.next_node.next_node.nil?
+        current_node.next_node = nil
         popped = true
+      else
+        current_node = current_node.next_node
       end
     end
   end
@@ -74,7 +84,7 @@ class LinkedList
   def contains?(value)
     value_found = false
     current_node = @head_node
-    until current_node.nil?
+    until current_node.nil? || value_found
       if current_node.value == value
         value_found = true
       else
@@ -115,14 +125,16 @@ class LinkedList
   end
 
   def insert_at(value, index)
+    # this works with negative and too high indexes, being simply appended
     node_at_index = at(index)
     node_at_prev_index = at(index - 1)
     new_node = Node.new(value)
-    return 'Invalid index' if node_at_prev_index.is_a? String
-
     new_node.next_node = node_at_index
-    new_node.next_node = nil if node_at_index.is_a? String
-    @head_node = new_node if index.zero?
+
+    # if the user's input is equal to the first or after the last index
+    append(value) if node_at_index.is_a? String
+    prepend(value) if index.zero?
+
     node_at_prev_index.next_node = new_node unless node_at_prev_index.is_a? String
   end
 
